@@ -1,9 +1,22 @@
 import MeetupList from '../components/meetups/MeetupList';
-import DUMMY_MEETUPS from '../data/dummy'
 import { MongoClient } from 'mongodb';
+import Head from 'next/head';
+
 
 function HomePage(props) {
-  return <MeetupList meetups={props.meetups} />
+  return (
+    <>
+    <Head>
+        <title>Coldplay Concerts</title>
+        <meta
+          name='description'
+          content='Browse a huge list of highly active Coldplay Concerts!'
+        />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+
+    </>
+  )
 }
 
 // export async function getServerSideProps(context) {
