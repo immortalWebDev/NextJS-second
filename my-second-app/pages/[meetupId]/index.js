@@ -1,47 +1,65 @@
+import { MongoClient, ObjectId } from 'mongodb';
+
 import MeetupDetail from '../../components/meetups/MeetupDetail';
-import DUMMY_MEETUPS from '../../data/dummy'
 
-function MeetupDetails({ meetupData }) {
-  if (!meetupData) {
-    return <p>Meetup not found</p>;
-  }
-
+function MeetupDetails(props) {
   return (
     <MeetupDetail
-      image={meetupData.image}
-      title={meetupData.title}
-      address={meetupData.address}
-      description={meetupData.description}
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 }
 
 export async function getStaticPaths() {
-  // Define the paths to pre-render based on meetupId
+  const client = await MongoClient.connect(
+    'mongodb+srv://pgbadgujar007:p8T5jWD7SLoNlDC0@cluster0.qnxq8.mongodb.net/testing?retryWrites=true&w=majority&connectTimeoutMS=10000'
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+
+  client.close();
+
   return {
     fallback: false,
-    paths: [
-      { params: { meetupId: 'm1' } },
-      { params: { meetupId: 'm2' } },
-      { params: { meetupId: 'm3' } },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
   };
 }
 
 export async function getStaticProps(context) {
-  // Fetch data for a single meetup based on the meetupId
+  // fetch data for a single meetup
+
   const meetupId = context.params.meetupId;
 
-  // Example of fetching data (static data for now)
-  const meetupData = DUMMY_MEETUPS.find(meetup => meetup.id === meetupId);
+  const client = await MongoClient.connect(
+    'mongodb+srv://pgbadgujar007:p8T5jWD7SLoNlDC0@cluster0.qnxq8.mongodb.net/testing?retryWrites=true&w=majority&connectTimeoutMS=10000'
+  );
+  const db = client.db();
 
-  if (!meetupData) {
-    return { notFound: true }; // Return a 404 page if the meetup isn't found
-  }
+  const meetupsCollection = db.collection('meetups');
+
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: new ObjectId(meetupId),
+  });
+
+  client.close();
 
   return {
     props: {
-      meetupData,
+      meetupData: {
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
+        image: selectedMeetup.image,
+        description: selectedMeetup.description,
+      },
     },
   };
 }
